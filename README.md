@@ -16,6 +16,8 @@ Collection of Ansible MongoDB modules
 
 ####Try `mongodb_db` module:
 
+Module requires `python` (2.6+), `pymongo` and `ansible`
+
 ```
 git clone https://github.com/KrakowMUG/ansible-mongodb.git
 cd ansible-mongodb/
@@ -24,7 +26,7 @@ ansible-playbook ./examples/mongodb_db_playbook.yml -M ./modules/ -v
 
 ####Sample output:
 
-```
+```javascript
 PLAY [localhost] ************************************************************** 
 
 GATHERING FACTS *************************************************************** 
