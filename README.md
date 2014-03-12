@@ -1,6 +1,13 @@
 ##Ansible MongoDB modules
 
+Collection of Ansible MongoDB modules
+
 ###http://kmug.pl/ansible-mongodb/
+
+###KMUG future plans:
+ * `mongodb_db`
+ * `mongodb_replication`
+ * `mongodb_sharding`
 
 ###Contributing
 
