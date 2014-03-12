@@ -1,0 +1,103 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Łukasz Adamczyk <l.adamczyk@avsystem.com>, Adrian Wolny <a.wolny@avsystem.com>
+# Kraków MongoDB User Group 2014
+
+from ansible.module_utils.basic import *
+
+HAS_PYMONGO = True
+try:
+    from pymongo.errors import *
+    from pymongo import MongoClient
+except ImportError:
+    HAS_PYMONGO = False
+
+
+def is_database_present(db, dbname):
+    return dbname in db.database_names()
+
+
+def drop_database(db, dbname):
+    if dbname:
+        if is_database_present(db, dbname):
+            try:
+                db.drop_database(dbname)
+            except OperationFailure as e:
+                return False, False, "Unable to drop database: %s" % e.message
+            except InvalidName:
+                return False, False, "Invalid database name"
+            return True, True, "Database %s successfully dropped" % dbname
+        else:
+            return True, False, "Database %s was already absent" % dbname
+    else:
+        return False, False, "Please specify dbname="
+
+
+def lock(db):
+    if not db.is_locked:
+        try:
+            db.fsync(lock=True)
+        except OperationFailure, e:
+            return False, False, "Unable to lock database: %s" % e.message
+        return True, True, "Instance successfully locked"
+    else:
+        return True, False, "Instance was already locked"
+
+
+def unlock(db):
+    if db.is_locked:
+        try:
+            db.unlock()
+        except OperationFailure, e:
+            return False, False, "Unable to unlock database: %s" % e.message
+        return True, True, "Instance successfully unlocked"
+    else:
+        return True, False, "Instance was already unlocked"
+
+
+def main():
+    module = AnsibleModule(
+        argument_spec=dict(
+            action=dict(default=None, choices=['lock', 'unlock', 'drop']),
+            dbname=dict(default=None, aliases=['target', 'name']),
+            source=dict(default=None),
+            username=dict(default=None),
+            password=dict(default=None, no_log=True),
+            hostname=dict(default='localhost'),
+            port=dict(default=27017, type='int'),
+        ),
+    )
+
+    if not HAS_PYMONGO:
+        module.fail_json(msg="Python pymongo is required")
+
+    action = module.params['action']
+    dbname = module.params['dbname']
+    source = module.params['source']
+    username = module.params['username']
+    password = module.params['password']
+    hostname = module.params['hostname']
+    port = module.params['port']
+
+    try:
+        db = MongoClient(host=hostname, port=port)
+    except ConnectionFailure, e:
+        module.fail_json(msg="Unable to connect to database: %s" % e.message)
+
+    if action == 'drop':
+        success, changed, message = drop_database(db, dbname)
+    elif action == 'lock':
+        success, changed, message = lock(db)
+    elif action == 'unlock':
+        success, changed, message = unlock(db)
+
+    if success:
+        module.exit_json(changed=changed, msg=message)
+    else:
+        module.fail_json(msg=message)
+
+    db.disconnect()
+
+
+main()

@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Lock MongoDB
+      mongodb_db: action=lock
+
+    - name: Another MongoDB lock
+      mongodb_db: action=lock
+
+    - name: Do something e.g. backup
+      debug: msg="wow! do backup! so safety! such data! so pro!"
+
+    - name: Unlock MongoDB
+      mongodb_db: action=unlock
+
+    - name: Another MongoDB unlock
+      mongodb_db: action=unlock
+
+    - name: Drop database foobar1337KMUGexample
+      mongodb_db: action=drop name=foobar1337KMUGexample
